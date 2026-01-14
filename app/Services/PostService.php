@@ -7,41 +7,45 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class PostService
 {
     /**
      * Create a new post.
      */
-    public function createPost(array $data, ?UploadedFile $image = null): Post
-    {
-        if ($image) {
-            $path = $image->store('posts', 'public');
-            $data['image_path'] = $path;
-        }
+public function createPost(array $data, ?UploadedFile $image = null): Post
+{
+    if ($image) {
+        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
 
-        return Post::create($data);
+        $path = $image->storeAs('posts', $filename, 'public');
+        $data['image_path'] = $path;
     }
 
+    return Post::create($data);
+}
     /**
      * Update an existing post.
      */
     public function updatePost(Post $post, array $data, ?UploadedFile $image = null): Post
-    {
-        if ($image) {
-            // Delete old image if exists
-            if ($post->image_path) {
-                Storage::disk('public')->delete($post->image_path);
-            }
-
-            $path = $image->store('posts', 'public');
-            $data['image_path'] = $path;
+{
+    if ($image) {
+        if ($post->image_path) {
+            Storage::disk('public')->delete($post->image_path);
         }
 
-        $post->update($data);
+        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('posts', $filename, 'public');
 
-        return $post;
+        $data['image_path'] = $path;
     }
+
+    $post->update($data);
+
+    return $post;
+}
+
 
     /**
      * Delete a post.
@@ -60,7 +64,10 @@ class PostService
      */
     public function getNewsFeed(int $userId): LengthAwarePaginator
     {
-        // Get posts from user and friends
+        $friendIds = \Illuminate\Support\Facades\DB::table('friendships')
+            ->where('user_id', $userId)
+            ->pluck('friend_id');
+
         return Post::with(['user', 'comments.user'])
             ->withCount('likes')
             ->withExists([
@@ -68,12 +75,7 @@ class PostService
                         $query->where('user_id', $userId);
                     }
                 ])
-            ->where(function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                    ->orWhereHas('user.friends', function ($q) use ($userId) {
-                        $q->where('friend_id', $userId);
-                    });
-            })
+            ->whereIn('user_id', $friendIds->push($userId))
             ->latest()
             ->paginate(10);
     }

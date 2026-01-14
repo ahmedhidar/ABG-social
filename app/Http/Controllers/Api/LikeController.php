@@ -43,11 +43,11 @@ class LikeController extends Controller
     )]
     public function toggle(Request $request, Post $post)
     {
-        $liked = $this->likeService->toggleLike($post, $request->user());
+        $result = $this->likeService->toggleLike($post, $request->user()->id);
 
         return response()->json([
-            'liked' => $liked,
-            'message' => $liked ? 'Post liked' : 'Post unliked'
+            'liked' => $result['status'] === 'liked',
+            'message' => $result['status'] === 'liked' ? 'Post liked' : 'Post unliked'
         ]);
     }
 }
