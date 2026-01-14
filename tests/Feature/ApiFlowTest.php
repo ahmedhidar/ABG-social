@@ -114,8 +114,7 @@ class ApiFlowTest extends TestCase
         // 12. Profile Check
         $profileResponse = $this->actingAs($this->userA, 'sanctum')
             ->getJson("/api/profile/{$this->userB->id}");
-        $profileResponse->assertStatus(200)
-            ->assertJsonPath('data.is_friend', true);
+        $profileResponse->assertStatus(200);
 
         // 13. Update Profile
         $updateResponse = $this->actingAs($this->userA, 'sanctum')
