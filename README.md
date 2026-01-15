@@ -1,6 +1,6 @@
 # ABG Social Media Platform
 
-A modern, high-performance social media application built with Laravel 11, featuring real-time interactions, a robust API, and a sleek frontend powered by Alpine.js and Tailwind CSS.
+A modern, high-performance social media application built with Laravel 12, featuring real-time interactions, a robust API, and a sleek frontend powered by Alpine.js and Tailwind CSS.
 
 ## 🚀 Features
 
